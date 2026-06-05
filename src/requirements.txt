@@ -1,0 +1,5 @@
+# Runtime dependencies for the Lambda functions (installed by `sam build`).
+#
+# boto3 / botocore are provided by the AWS Lambda python3.11 runtime — do not vendor them.
+# Slack notifications (Phase 4) will use urllib from the standard library, so no
+# third-party packages are required yet. Add runtime deps here as phases need them.

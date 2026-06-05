@@ -1,0 +1,18 @@
+version = 0.1
+
+[default.global.parameters]
+stack_name = "crm-lead-processing"
+
+[default.build.parameters]
+cached = true
+parallel = true
+
+[default.deploy.parameters]
+stack_name = "crm-lead-processing"
+region = "us-east-1"
+resolve_s3 = true
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+
+[default.validate.parameters]
+lint = true

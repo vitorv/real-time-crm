@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Real-Time CRM Lead Processing and Notification System.
+  Phase 1 scaffold: data bucket + Ingest webhook receiver (stub).
+  Later phases add the SQS delay queue, Enrich function, and Slack notification.
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    Description: Deployment stage name, used in resource names.
+
+Globals:
+  Function:
+    Runtime: python3.11
+    Timeout: 30
+    MemorySize: 256
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        LOG_LEVEL: INFO
+        DATA_BUCKET: !Ref DataBucket
+        SOURCE_PREFIX: source/
+        TARGET_PREFIX: target/
+
+Resources:
+  # S3 data lake: source/ (raw CRM events) and target/ (enriched leads).
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub crm-leads-${AWS::AccountId}-${AWS::Region}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  # Webhook receiver. Phase 1: stub returning 200.
+  # Phase 2 implements parsing + writing crm_event_{lead_id}.json to source/.
+  IngestFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub crm-ingest-${Stage}
+      CodeUri: src/
+      Handler: ingest.app.lambda_handler
+      Description: Receives the Close CRM lead.created webhook (POST /crm).
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref DataBucket
+      Events:
+        CrmWebhook:
+          Type: Api
+          Properties:
+            Path: /crm
+            Method: post
+
+Outputs:
+  ApiUrl:
+    Description: Public webhook URL to register with Close (POST /crm).
+    Value: !Sub https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/crm
+  DataBucketName:
+    Description: Name of the S3 data bucket.
+    Value: !Ref DataBucket
+  IngestFunctionArn:
+    Description: ARN of the Ingest Lambda.
+    Value: !GetAtt IngestFunction.Arn

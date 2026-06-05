@@ -2,3 +2,23 @@
 context_vault/
 CLAUDE.md
 .claude/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# aws sam
+.aws-sam/
+samconfig.local.toml
+
+# env / secrets
+.env
+*.env
+
