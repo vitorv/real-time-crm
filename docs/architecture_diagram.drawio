@@ -1,0 +1,85 @@
+<mxfile host="app.diagrams.net" agent="Claude Code">
+  <diagram id="crm-arch" name="Architecture">
+    <mxGraphModel dx="1903" dy="1730" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="520" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;fontSize=20;fontStyle=1;fontColor=#1A237E;align=center;" value="Real-Time CRM Lead Processing &amp; Notification System — Architecture" vertex="1">
+          <mxGeometry height="35" width="760" x="340" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="g1" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;strokeWidth=2;dashed=1;verticalAlign=top;fontSize=13;fontColor=#333333;spacingTop=5;" value="&lt;b&gt;External Source&lt;/b&gt;" vertex="1">
+          <mxGeometry height="190" width="140" x="40" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="g2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DEEBF7;strokeColor=#3A7CA5;strokeWidth=2;dashed=1;verticalAlign=top;fontSize=13;fontColor=#2E75B6;spacingTop=5;" value="&lt;b&gt;Ingestion (Webhook Receiver)&lt;/b&gt;" vertex="1">
+          <mxGeometry height="190" width="290" x="205" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="g3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF3E0;strokeColor=#E65100;strokeWidth=2;dashed=1;verticalAlign=top;fontSize=13;fontColor=#E65100;spacingTop=5;" value="&lt;b&gt;Raw Store + 10-min Delay&lt;/b&gt;" vertex="1">
+          <mxGeometry height="190" width="270" x="520" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="g4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8F5E9;strokeColor=#2E7D32;strokeWidth=2;dashed=1;verticalAlign=top;fontSize=13;fontColor=#2E7D32;spacingTop=5;" value="&lt;b&gt;Enrichment + Lookup&lt;/b&gt;" vertex="1">
+          <mxGeometry height="280" width="320" x="815" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="g5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F3E5F5;strokeColor=#7B1FA2;strokeWidth=2;dashed=1;verticalAlign=top;fontSize=13;fontColor=#7B1FA2;spacingTop=5;" value="&lt;b&gt;Notification&lt;/b&gt;" vertex="1">
+          <mxGeometry height="190" width="200" x="1160" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="closecrm" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;verticalAlign=top;labelPosition=center;verticalLabelPosition=bottom;align=center;fontStyle=1;fontColor=#000000;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="&lt;span style=&#39;font-size:11px;&#39;&gt;Close CRM&lt;/span&gt;&lt;br&gt;&lt;i style=&#39;font-size:8px;&#39;&gt;lead.created&lt;br&gt;webhook&lt;/i&gt;" vertex="1">
+          <mxGeometry height="80" width="70" x="70" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="apigw" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#E7157B;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=9;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.api_gateway;shadow=1;" value="API Gateway&lt;br&gt;&lt;i style=&#39;font-size:8px&#39;&gt;POST /crm&lt;/i&gt;" vertex="1">
+          <mxGeometry height="48" width="48" x="235" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="lambdaIngest" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ED7100;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=9;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;shadow=1;" value="Lambda — Ingest&lt;br&gt;&lt;i style=&#39;font-size:7px&#39;&gt;verify sig + parse&lt;/i&gt;" vertex="1">
+          <mxGeometry height="48" width="48" x="395" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="s3source" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#7AA116;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=9;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;shadow=1;" value="S3 — source/&lt;br&gt;&lt;i style=&#39;font-size:7px&#39;&gt;crm_event_&amp;#123;lead_id&amp;#125;.json&lt;/i&gt;" vertex="1">
+          <mxGeometry height="48" width="48" x="545" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="sqs" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#E7157B;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=9;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.simple_queue_service;shadow=1;" value="SQS Delay Queue&lt;br&gt;&lt;i style=&#39;font-size:7px&#39;&gt;DelaySeconds=600&lt;/i&gt;" vertex="1">
+          <mxGeometry height="48" width="48" x="690" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="lambdaEnrich" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#ED7100;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=9;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;shadow=1;" value="Lambda — Enrich&lt;br&gt;&lt;i style=&#39;font-size:7px&#39;&gt;merge by lead_id&lt;/i&gt;" vertex="1">
+          <mxGeometry height="48" width="48" x="855" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="s3target" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#7AA116;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=9;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;shadow=1;" value="S3 — target/&lt;br&gt;&lt;i style=&#39;font-size:7px&#39;&gt;enriched lead&lt;/i&gt;" vertex="1">
+          <mxGeometry height="48" width="48" x="1025" y="225" as="geometry" />
+        </mxCell>
+        <mxCell id="lookupbucket" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#7AA116;strokeColor=#2E7D32;dashed=1;dashPattern=6 4;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=9;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;shadow=1;" value="Public S3: dea-lead-owner&lt;br&gt;&lt;i style=&#39;font-size:7px&#39;&gt;&amp;#123;lead_id&amp;#125;.json (read-only)&lt;/i&gt;" vertex="1">
+          <mxGeometry height="48" width="48" x="925" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="slack" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4A154B;strokeColor=#3A0E3B;fontColor=#FFFFFF;fontStyle=1;fontSize=11;shadow=1;" value="Slack&lt;br&gt;&lt;i style=&#39;font-size:8px&#39;&gt;Incoming Webhook&lt;/i&gt;" vertex="1">
+          <mxGeometry height="44" width="120" x="1200" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="orlabel" parent="1" style="text;html=1;fontSize=9;fontStyle=2;fontColor=#7B1FA2;align=center;" value="— or —" vertex="1">
+          <mxGeometry height="16" width="120" x="1200" y="247" as="geometry" />
+        </mxCell>
+        <mxCell id="ses" parent="1" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#C7131F;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=9;fontStyle=1;aspect=fixed;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.simple_email_service;shadow=1;" value="SES — Email" vertex="1">
+          <mxGeometry height="48" width="48" x="1236" y="278" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="closecrm" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#3A7CA5;strokeWidth=2;fontSize=9;fontStyle=1;fontColor=#2E75B6;" target="apigw" value="http POST">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="apigw" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#3A7CA5;strokeWidth=2;" target="lambdaIngest">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="lambdaIngest" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#E65100;strokeWidth=2;fontSize=9;fontStyle=1;fontColor=#E65100;" target="s3source" value="PUT JSON">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="s3source" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#E65100;strokeWidth=2;fontSize=9;fontStyle=1;fontColor=#E65100;" target="sqs" value="S3 event">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="sqs" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#2E7D32;strokeWidth=2;fontSize=9;fontStyle=1;fontColor=#2E7D32;" target="lambdaEnrich" value="after 10 min">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="lambdaEnrich" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#2E7D32;strokeWidth=2;dashed=1;fontSize=9;fontStyle=1;fontColor=#2E7D32;startArrow=classic;startFill=1;" target="lookupbucket" value="GET {lead_id}.json">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="lambdaEnrich" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#2E7D32;strokeWidth=2;fontSize=9;fontStyle=1;fontColor=#2E7D32;" target="s3target" value="PUT enriched">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="lambdaEnrich" style="edgeStyle=orthogonalEdgeStyle;rounded=1;strokeColor=#7B1FA2;strokeWidth=2;fontSize=9;fontStyle=1;fontColor=#7B1FA2;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="slack" value="New Lead Alert">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
