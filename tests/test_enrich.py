@@ -124,3 +124,47 @@ def test_handler_propagates_lookup_not_found_for_retry(monkeypatch):
 
     with pytest.raises(LookupNotFound):
         lambda_handler(sqs_event(BUCKET, src_key), None)
+
+
+def _seed_source(monkeypatch):
+    """Create the bucket + a source object; mock the owner lookup. Returns (s3, lead_id, key)."""
+    monkeypatch.setenv("DATA_BUCKET", BUCKET)
+    s3c = boto3.client("s3", region_name="us-east-1")
+    s3c.create_bucket(Bucket=BUCKET)
+    payload = load_fixture("close_lead_created_2.json")
+    owner = load_fixture("lead_owner_2.json")
+    lead_id = payload["event"]["lead_id"]
+    src_key = f"source/crm_event_{lead_id}.json"
+    s3c.put_object(Bucket=BUCKET, Key=src_key, Body=json.dumps(payload).encode("utf-8"))
+    monkeypatch.setattr("enrich.app.fetch_lead_owner", lambda lid, url: owner)
+    return s3c, lead_id, src_key
+
+
+@mock_aws
+def test_handler_sends_slack_alert_when_configured(monkeypatch):
+    monkeypatch.setenv("SLACK_WEBHOOK_URL", "https://hooks.slack.test/x")
+    _, lead_id, src_key = _seed_source(monkeypatch)
+    sent: list[tuple[str, dict]] = []
+    monkeypatch.setattr(
+        "enrich.app.post_new_lead_alert", lambda url, enriched: sent.append((url, enriched))
+    )
+
+    lambda_handler(sqs_event(BUCKET, src_key), None)
+
+    assert len(sent) == 1
+    url, enriched = sent[0]
+    assert url == "https://hooks.slack.test/x"
+    assert enriched["lead_id"] == lead_id
+    assert enriched["lead_owner"] == "Lucija Bitunjac"
+
+
+@mock_aws
+def test_handler_skips_slack_when_no_webhook(monkeypatch):
+    monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
+    _, _, src_key = _seed_source(monkeypatch)
+    calls: list[int] = []
+    monkeypatch.setattr("enrich.app.post_new_lead_alert", lambda url, enriched: calls.append(1))
+
+    lambda_handler(sqs_event(BUCKET, src_key), None)
+
+    assert calls == []

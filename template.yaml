@@ -10,6 +10,11 @@ Parameters:
     Type: String
     Default: dev
     Description: Deployment stage name, used in resource names.
+  SlackWebhookUrl:
+    Type: String
+    Default: ''
+    NoEcho: true
+    Description: Slack incoming webhook URL for New Lead Alerts (FR5). Leave empty to skip notifications.
 
 Globals:
   Function:
@@ -120,7 +125,10 @@ Resources:
       FunctionName: !Sub crm-enrich-${Stage}
       CodeUri: src/
       Handler: enrich.app.lambda_handler
-      Description: Enriches a lead with owner data from the public lookup bucket.
+      Description: Enriches a lead with owner data and posts the Slack New Lead Alert.
+      Environment:
+        Variables:
+          SLACK_WEBHOOK_URL: !Ref SlackWebhookUrl
       Policies:
         - S3CrudPolicy:
             BucketName: !Ref DataBucket

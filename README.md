@@ -33,9 +33,9 @@ Design decisions are recorded in `context_vault/decisions/` (ADR-001). The sourc
 | --- | --- | --- |
 | 0 | Project setup | ✅ |
 | 1 | Project scaffold (this commit) | ✅ |
-| 2 | Webhook ingestion → S3 `source/` (FR1, FR2) | ⬜ |
-| 3 | 10-min delay + lookup + enrichment → S3 `target/` (FR3, FR4) | ⬜ |
-| 4 | Slack notification + error handling/retries/logging (FR5) | ⬜ |
+| 2 | Webhook ingestion → S3 `source/` (FR1, FR2) | ✅ |
+| 3 | 10-min delay + lookup + enrichment → S3 `target/` (FR3, FR4) | ✅ |
+| 4 | Slack notification + error handling/retries/logging (FR5) | ✅ |
 | 5 | Docs + end-to-end validation | ⬜ |
 
 ## Prerequisites
@@ -53,8 +53,9 @@ Design decisions are recorded in `context_vault/decisions/` (ADR-001). The sourc
 template.yaml          # AWS SAM infrastructure (API Gateway, Lambda, S3, …)
 samconfig.toml         # SAM build/deploy defaults (stack name, region)
 src/
-  common/              # shared config + JSON logging
-  ingest/app.py        # Ingest Lambda — Close webhook receiver
+  common/              # shared config, JSON logging, S3, lookup, Slack
+  ingest/app.py        # Ingest Lambda — Close webhook receiver (FR1/FR2)
+  enrich/app.py        # Enrich Lambda — owner lookup + merge + Slack alert (FR3/FR4/FR5)
   requirements.txt     # runtime deps bundled by `sam build`
 tests/                 # pytest suite
 requirements-dev.txt   # local/CI deps (pytest, ruff, mypy, moto)
@@ -83,8 +84,14 @@ pytest
 sam validate --lint
 sam build
 sam deploy --guided      # first time; afterwards just `sam deploy`
+
+# pass the Slack webhook for New Lead Alerts (kept out of source / git):
+sam deploy --parameter-overrides SlackWebhookUrl=https://hooks.slack.com/services/XXX/YYY/ZZZ
 ```
 
 The stack outputs an **`ApiUrl`** (`.../Prod/crm`). That public URL is what gets
 registered as the Close webhook subscription (coordinate with Azmat/Ninad to create
 it once the URL exists).
+
+The Slack webhook URL is a `NoEcho` parameter (`SlackWebhookUrl`); leave it empty to
+deploy without notifications. The Enrich Lambda skips the alert when it is unset.

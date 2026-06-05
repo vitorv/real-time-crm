@@ -22,6 +22,7 @@ from common import s3
 from common.config import Config, load_config
 from common.logging import configure_logging, get_logger
 from common.lookup import fetch_lead_owner
+from common.slack import post_new_lead_alert
 from ingest.app import extract_lead_id
 
 configure_logging()
@@ -58,6 +59,16 @@ def _iter_source_keys(sqs_record: dict[str, Any]) -> list[tuple[str, str]]:
     return pairs
 
 
+def _notify(enriched: dict[str, Any], cfg: Config) -> None:
+    """Send the Slack New Lead Alert (FR5), if a webhook is configured."""
+    lead_id = enriched.get("lead_id")
+    if not cfg.slack_webhook_url:
+        logger.warning("enrich.notify_skipped", extra={"lead_id": lead_id, "reason": "no webhook"})
+        return
+    post_new_lead_alert(cfg.slack_webhook_url, enriched)
+    logger.info("enrich.notified", extra={"lead_id": lead_id})
+
+
 def _process_source_object(bucket: str, key: str, cfg: Config) -> None:
     event_payload = s3.get_json(bucket, key)
     lead_id = extract_lead_id(event_payload)
@@ -66,6 +77,7 @@ def _process_source_object(bucket: str, key: str, cfg: Config) -> None:
     target_key = f"{cfg.target_prefix}enriched_{lead_id}.json"
     s3.put_json(cfg.data_bucket, target_key, enriched)
     logger.info("enrich.stored", extra={"lead_id": lead_id, "key": target_key})
+    _notify(enriched, cfg)
 
 
 def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
