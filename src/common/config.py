@@ -16,6 +16,7 @@ class Config:
     region: str
     source_prefix: str
     target_prefix: str
+    lookup_base_url: str
 
 
 def load_config() -> Config:
@@ -25,4 +26,7 @@ def load_config() -> Config:
         region=os.environ.get("AWS_REGION", "us-east-1"),
         source_prefix=os.environ.get("SOURCE_PREFIX", "source/"),
         target_prefix=os.environ.get("TARGET_PREFIX", "target/"),
+        lookup_base_url=os.environ.get(
+            "LOOKUP_BASE_URL", "https://dea-lead-owner.s3.us-east-1.amazonaws.com"
+        ),
     )

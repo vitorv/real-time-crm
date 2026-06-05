@@ -2,8 +2,8 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
   Real-Time CRM Lead Processing and Notification System.
-  Phase 1 scaffold: data bucket + Ingest webhook receiver (stub).
-  Later phases add the SQS delay queue, Enrich function, and Slack notification.
+  Ingest webhook receiver + S3 data lake + SQS 10-min delay + Enrich function.
+  Phase 4 adds the Slack notification.
 
 Parameters:
   Stage:
@@ -24,11 +24,14 @@ Globals:
         DATA_BUCKET: !Ref DataBucket
         SOURCE_PREFIX: source/
         TARGET_PREFIX: target/
+        LOOKUP_BASE_URL: https://dea-lead-owner.s3.us-east-1.amazonaws.com
 
 Resources:
   # S3 data lake: source/ (raw CRM events) and target/ (enriched leads).
+  # An ObjectCreated event under source/ is sent to the SQS delay queue.
   DataBucket:
     Type: AWS::S3::Bucket
+    DependsOn: DelayQueuePolicy
     Properties:
       BucketName: !Sub crm-leads-${AWS::AccountId}-${AWS::Region}
       PublicAccessBlockConfiguration:
@@ -40,6 +43,55 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+      NotificationConfiguration:
+        QueueConfigurations:
+          - Event: s3:ObjectCreated:*
+            Queue: !GetAtt DelayQueue.Arn
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: source/
+
+  # 10-minute buffer (FR3): all messages delivered to this queue become visible
+  # only after DelaySeconds, giving Close time to assign the lead owner.
+  DelayQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub crm-enrich-delay-${Stage}
+      DelaySeconds: 600
+      VisibilityTimeout: 180
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DeadLetterQueue.Arn
+        maxReceiveCount: 3
+
+  # Captures messages that keep failing (e.g. owner file never appears).
+  DeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub crm-enrich-dlq-${Stage}
+      MessageRetentionPeriod: 1209600  # 14 days
+
+  # Allow S3 to send ObjectCreated notifications to the delay queue.
+  DelayQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref DelayQueue
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowS3SendMessage
+            Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action: sqs:SendMessage
+            Resource: !GetAtt DelayQueue.Arn
+            Condition:
+              ArnLike:
+                aws:SourceArn: !Sub arn:aws:s3:::crm-leads-${AWS::AccountId}-${AWS::Region}
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
 
   # Webhook receiver. Phase 1: stub returning 200.
   # Phase 2 implements parsing + writing crm_event_{lead_id}.json to source/.
@@ -60,6 +112,25 @@ Resources:
             Path: /crm
             Method: post
 
+  # Enrichment (FR4). Triggered by the delay queue ~10 min after the lead lands.
+  # Reads the source event, looks up the lead owner, merges, writes to target/.
+  EnrichFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub crm-enrich-${Stage}
+      CodeUri: src/
+      Handler: enrich.app.lambda_handler
+      Description: Enriches a lead with owner data from the public lookup bucket.
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref DataBucket
+      Events:
+        DelayQueueEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt DelayQueue.Arn
+            BatchSize: 1
+
 Outputs:
   ApiUrl:
     Description: Public webhook URL to register with Close (POST /crm).
@@ -67,6 +138,15 @@ Outputs:
   DataBucketName:
     Description: Name of the S3 data bucket.
     Value: !Ref DataBucket
+  DelayQueueUrl:
+    Description: URL of the 10-minute SQS delay queue.
+    Value: !Ref DelayQueue
+  DeadLetterQueueUrl:
+    Description: URL of the dead-letter queue.
+    Value: !Ref DeadLetterQueue
   IngestFunctionArn:
     Description: ARN of the Ingest Lambda.
     Value: !GetAtt IngestFunction.Arn
+  EnrichFunctionArn:
+    Description: ARN of the Enrich Lambda.
+    Value: !GetAtt EnrichFunction.Arn

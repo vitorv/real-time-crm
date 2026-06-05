@@ -20,3 +20,9 @@ def put_json(bucket: str, key: str, obj: Any) -> None:
         Body=json.dumps(obj, indent=2).encode("utf-8"),
         ContentType="application/json",
     )
+
+
+def get_json(bucket: str, key: str) -> Any:
+    """Read and parse JSON from ``s3://bucket/key``."""
+    resp = boto3.client("s3").get_object(Bucket=bucket, Key=key)
+    return json.loads(resp["Body"].read())
