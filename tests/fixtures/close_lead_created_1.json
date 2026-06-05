@@ -1,0 +1,17 @@
+{
+  "subscription_id": "whsub_1Lr0LeQ56WDreQtJNiuUAr",
+  "event": {
+    "id": "ev_70750rgrOVLfmED9y7ExRy",
+    "object_type": "lead",
+    "object_id": "lead_Q6uqUbqVS4NYyHGJnfxpfNKpZ0roxEDCdD9oIAaMJ4z",
+    "lead_id": "lead_Q6uqUbqVS4NYyHGJnfxpfNKpZ0roxEDCdD9oIAaMJ4z",
+    "action": "created",
+    "data": {
+      "id": "lead_Q6uqUbqVS4NYyHGJnfxpfNKpZ0roxEDCdD9oIAaMJ4z",
+      "display_name": "Adam Capozzoli",
+      "status_label": "Potential",
+      "date_created": "2025-09-04T07:27:17.642000+00:00",
+      "custom.cf_am3UgCUhyM5iNDtAPL84enDjUrZx1JsyVZ9uD9TbYwG": "YT DE ACADEMY Direct VSL"
+    }
+  }
+}

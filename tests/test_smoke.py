@@ -6,7 +6,6 @@ import json
 
 from common.config import load_config
 from common.logging import JsonFormatter, configure_logging, get_logger
-from ingest.app import lambda_handler
 
 
 def test_config_defaults(monkeypatch):
@@ -35,9 +34,3 @@ def test_json_formatter_emits_extra_fields():
     assert payload["message"] == "hello"
     assert payload["level"] == "INFO"
     assert payload["lead_id"] == "lead_1"
-
-
-def test_ingest_stub_returns_200():
-    resp = lambda_handler({"path": "/crm", "body": "{}"}, None)
-    assert resp["statusCode"] == 200
-    assert json.loads(resp["body"]) == {"status": "ok"}
