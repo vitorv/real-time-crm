@@ -1,8 +1,12 @@
 """Lead-owner lookup against the public ``dea-lead-owner`` S3 bucket (FR4).
 
 The file may not exist yet shortly after a lead is created — that's the whole
-point of the 10-minute delay. A 404 raises ``LookupNotFound`` so the caller can
-let SQS retry (and eventually dead-letter) the message.
+point of the 10-minute delay. A missing file raises ``LookupNotFound`` so the
+caller can let SQS retry (and eventually dead-letter) the message.
+
+Note: because the bucket does not grant public ``s3:ListBucket``, S3 returns
+**403 (AccessDenied)** for a key that doesn't exist — not 404. We treat both as
+"not found yet".
 """
 
 from __future__ import annotations
@@ -18,7 +22,7 @@ Opener = Callable[..., Any]
 
 
 class LookupNotFound(Exception):
-    """The owner file for this lead does not exist yet (HTTP 404)."""
+    """The owner file for this lead does not exist yet (HTTP 404 or 403)."""
 
 
 def fetch_lead_owner(
@@ -34,7 +38,8 @@ def fetch_lead_owner(
         with opener(url, timeout=timeout) as resp:
             payload = json.loads(resp.read())
     except urllib.error.HTTPError as exc:
-        if exc.code == 404:
+        # 404 = key missing; 403 = key missing on a bucket without public ListBucket.
+        if exc.code in (403, 404):
             raise LookupNotFound(lead_id) from exc
         raise
     if not isinstance(payload, dict):

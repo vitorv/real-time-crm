@@ -47,9 +47,12 @@ def test_fetch_lead_owner_parses_response():
     assert fetch_lead_owner("lead_1", "https://base", opener=opener) == owner
 
 
-def test_fetch_lead_owner_404_raises_lookup_not_found():
+@pytest.mark.parametrize("code", [403, 404])
+def test_fetch_lead_owner_missing_raises_lookup_not_found(code):
+    # The real public bucket returns 403 (not 404) for a missing key, since it
+    # doesn't grant public ListBucket — both must mean "not found yet".
     def opener(url, timeout=None):
-        raise urllib.error.HTTPError(url, 404, "Not Found", None, None)
+        raise urllib.error.HTTPError(url, code, "Not Found", None, None)
 
     with pytest.raises(LookupNotFound):
         fetch_lead_owner("lead_1", "https://base", opener=opener)

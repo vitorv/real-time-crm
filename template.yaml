@@ -15,6 +15,10 @@ Parameters:
     Default: ''
     NoEcho: true
     Description: Slack incoming webhook URL for New Lead Alerts (FR5). Leave empty to skip notifications.
+  LookupBaseUrl:
+    Type: String
+    Default: https://dea-lead-owner.s3.us-east-1.amazonaws.com
+    Description: Base URL of the lead-owner lookup. Override to point at test data.
 
 Globals:
   Function:
@@ -29,7 +33,7 @@ Globals:
         DATA_BUCKET: !Ref DataBucket
         SOURCE_PREFIX: source/
         TARGET_PREFIX: target/
-        LOOKUP_BASE_URL: https://dea-lead-owner.s3.us-east-1.amazonaws.com
+        LOOKUP_BASE_URL: !Ref LookupBaseUrl
 
 Resources:
   # S3 data lake: source/ (raw CRM events) and target/ (enriched leads).
