@@ -27,16 +27,21 @@ Close CRM ──webhook──▶ API Gateway ─▶ Lambda (Ingest) ─PUT─▶
 Design decisions are recorded in `context_vault/decisions/` (ADR-001). The source
 `.drawio` for the diagram is at [docs/architecture_diagram.drawio](docs/architecture_diagram.drawio).
 
-## Status
+## Status — ✅ Complete & live in production
+
+> All functional requirements (**FR1–FR5**) are implemented, deployed to AWS
+> (`us-east-1`), and **validated end-to-end on ~90 real leads with zero failures**.
+> The Close webhook subscription is active and delivering live leads through the full
+> pipeline: webhook → S3 `source/` → 10-minute delay → enrichment → Slack alert.
 
 | Phase | Scope | Status |
 | --- | --- | --- |
 | 0 | Project setup | ✅ |
-| 1 | Project scaffold (this commit) | ✅ |
+| 1 | Project scaffold | ✅ |
 | 2 | Webhook ingestion → S3 `source/` (FR1, FR2) | ✅ |
 | 3 | 10-min delay + lookup + enrichment → S3 `target/` (FR3, FR4) | ✅ |
 | 4 | Slack notification + error handling/retries/logging (FR5) | ✅ |
-| 5 | Docs + end-to-end validation | ⬜ |
+| 5 | Deploy + end-to-end validation | ✅ |
 
 ## Prerequisites
 
@@ -61,7 +66,7 @@ tests/                 # pytest suite
 requirements-dev.txt   # local/CI deps (pytest, ruff, mypy, moto)
 pyproject.toml         # ruff / mypy / pytest config
 .github/workflows/     # CI (lint, type-check, test, sam validate)
-docs/                  # requirements doc + architecture diagram
+docs/                  # requirements, architecture diagram, project plan, console guides
 ```
 
 ## Local development
@@ -95,3 +100,13 @@ it once the URL exists).
 
 The Slack webhook URL is a `NoEcho` parameter (`SlackWebhookUrl`); leave it empty to
 deploy without notifications. The Enrich Lambda skips the alert when it is unset.
+
+Tear everything down with `sam delete` (serverless, so it costs ~1–2¢/day at idle until then).
+
+## Documentation
+
+| Doc | What it covers |
+| --- | --- |
+| [docs/PROJECT_PLAN.md](docs/PROJECT_PLAN.md) | Phased plan, what was built, decisions, status |
+| [docs/architecture_diagram.drawio](docs/architecture_diagram.drawio) / [.png](docs/architecture_diagram.png) | System architecture diagram |
+| [docs/aws-console-guides/](docs/aws-console-guides/) | Click-by-click console setup guides for each phase |
