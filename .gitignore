@@ -22,3 +22,5 @@ samconfig.local.toml
 .env
 *.env
 
+# presentation files
+docs/presentation/
